@@ -2,6 +2,14 @@
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './app/components/HelloWorld.vue'
 import router from './app/router/index'
+import { useRoutesStore } from './app/stores/routes'
+import { onMounted } from 'vue'
+
+const routesStore = useRoutesStore()
+
+onMounted(() => {
+  routesStore.setRoutes(router.getRoutes())
+})
 </script>
 
 <template>
@@ -22,7 +30,7 @@ import router from './app/router/index'
         <RouterLink to="/about">About</RouterLink>-->
 
         <RouterLink
-          v-for="item of router.getRoutes()"
+          v-for="item of routesStore.getRoutes"
           :key="item.path"
           :to="item.path"
           >{{

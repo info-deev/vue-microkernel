@@ -12,8 +12,8 @@ const app = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
-app.use(microkernelPlugin)
 app.use(router)
+app.use(microkernelPlugin)
 
 router.isReady().then(() => {
   app.mount('#app')

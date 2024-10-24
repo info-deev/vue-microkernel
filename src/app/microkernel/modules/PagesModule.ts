@@ -7,6 +7,8 @@ import router from '@/app/router'
 import type { RouteRecordRaw } from 'vue-router'
 
 import moduleExistenceChecking from '../middleware/moduleExistenceChecking.middleware'
+import type { Scheduler } from '../classes/Scheduler.class'
+import { useRoutesStore } from '@/app/stores/routes'
 
 export interface IPModule {
   id: string
@@ -62,18 +64,35 @@ export default class PagesModule implements Module {
   run(microkernel: Microkernel): void {
     microkernel.publish('log' as Event, `${this.name} запущен`)
 
+    const scheduler = microkernel.getState('scheduler') as Scheduler
+    const routesStore = useRoutesStore()
+
+    if (scheduler) {
+      scheduler.scheduleAt(new Date(Date.now() + 10000), () => {
+        this.connectingModules()
+        routesStore.setRoutes(router.getRoutes())
+      })
+    } else {
+      this.connectingModules()
+      routesStore.setRoutes(router.getRoutes())
+    }
+  }
+
+  receiveData(data: any): void {
+    console.log(`PagesModule получил данные: ${data}`)
+  }
+
+  connectingModules = () => {
     const runPageModule = applyMiddleware(this.addModule, this.middlewares)
-    const modules = import.meta.glob('@/modules/*/index.ts', { eager: true })
+    const modules = import.meta.glob('@/modules/*/index.ts', {
+      eager: true,
+    })
 
     for (const path in modules) {
       const module: any = modules[path]
       // Предполагаем, что экспортируется по умолчанию
       runPageModule(module.default)
     }
-  }
-
-  receiveData(data: any): void {
-    console.log(`PagesModule получил данные: ${data}`)
   }
 
   addModule = (pModule: IPModule) => {
